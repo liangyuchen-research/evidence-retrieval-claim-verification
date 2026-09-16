@@ -1,4 +1,4 @@
-"""Check the curated notebook without downloading data or training models."""
+"""Validate notebook structure and evidence handling without loading models."""
 
 from __future__ import annotations
 
@@ -6,6 +6,7 @@ import ast
 import json
 import math
 import re
+import tempfile
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -36,6 +37,7 @@ def main() -> None:
     all_code = "\n".join(sources)
     assert "RUN_TEST_SUBMISSION = False" in all_code
     assert "DOWNLOAD_DATA = False" in all_code
+    assert "INSTALL_DEPENDENCIES = False" in all_code
     assert "final_trainer.evaluate()" not in all_code
     assert "eval_dataset=final_dev_ds" not in all_code
 
@@ -75,6 +77,68 @@ def main() -> None:
     arguments = helper_namespace["make_training_args"]({"eval_strategy": "no"})
     assert arguments.eval_strategy == "no"
 
+    # Missing retrieval must never fall back to gold evidence. Evidence depth
+    # must follow K selected after helper definitions have been executed.
+    helper_names = (
+        "clean_text", "join_evidence", "build_examples", "load_json",
+        "validate_submission", "evaluate_predictions",
+    )
+    evidence_namespace = {
+        "re": re,
+        "_WS_RE": re.compile(r"\s+"),
+        "_ujson": None,
+        "json": json,
+        "Path": Path,
+        "np": SimpleNamespace(mean=lambda values: sum(values) / len(values)),
+        "K_RETRIEVE": 3,
+        "SEP": " [SEP] ",
+        "LABEL2ID": {"SUPPORTS": 0, "REFUTES": 1, "NOT_ENOUGH_INFO": 2, "DISPUTED": 3},
+    }
+    helper_source = "\n\n".join(ast.unparse(definitions[name]) for name in helper_names)
+    exec("from __future__ import annotations\n" + helper_source, evidence_namespace)
+
+    def expect_value_error(function, *args, **kwargs):
+        try:
+            function(*args, **kwargs)
+        except ValueError:
+            return
+        raise AssertionError(f"{function.__name__} accepted invalid input")
+
+    passages = {"a": "First", "b": "Second", "c": "Third", "d": "Fourth"}
+    claim = {"c1": {"claim_text": "Example", "claim_label": "SUPPORTS", "evidences": ["a"]}}
+    make_examples = evidence_namespace["build_examples"]
+    for missing in ({}, {"c1": []}):
+        expect_value_error(make_examples, claim, passages, use_evidences=missing, has_labels=False)
+    expect_value_error(make_examples, claim, passages, use_evidences={"c1": ["unknown"]})
+    evidence_namespace["K_RETRIEVE"] = 4
+    examples = make_examples(claim, passages, use_evidences={"c1": list(passages)}, has_labels=False)
+    assert examples[0]["evidence_text"] == "First [SEP] Second [SEP] Third [SEP] Fourth"
+    assert "label" not in examples[0]
+
+    # Verify that the evaluator scores every claim and rejects incomplete
+    # predictions instead of reporting accuracy over a favorable subset.
+    gold_eval = {
+        "c1": {"claim_label": "SUPPORTS", "evidences": ["a"]},
+        "c2": {"claim_label": "REFUTES", "evidences": ["b"]},
+    }
+    predictions = {
+        "c1": {"claim_label": "SUPPORTS", "evidences": ["a"]},
+        "c2": {"claim_label": "SUPPORTS", "evidences": ["b"]},
+    }
+    evaluate = evidence_namespace["evaluate_predictions"]
+    with tempfile.TemporaryDirectory() as directory:
+        gold_path = Path(directory) / "gold.json"
+        prediction_path = Path(directory) / "predictions.json"
+        gold_path.write_text(json.dumps(gold_eval), encoding="utf-8")
+        prediction_path.write_text(json.dumps(predictions), encoding="utf-8")
+        scores = evaluate(prediction_path, gold_path)
+        assert scores["evaluated_claims"] == scores["total_claims"] == 2
+        assert math.isclose(scores["claim_accuracy"], 0.5)
+        assert math.isclose(scores["evidence_fscore"], 1.0)
+        assert math.isclose(scores["harmonic_mean"], 2 / 3)
+        prediction_path.write_text(json.dumps({"c1": predictions["c1"]}), encoding="utf-8")
+        expect_value_error(evaluate, prediction_path, gold_path)
+
     try:
         import nbformat
     except ImportError:
@@ -87,6 +151,8 @@ def main() -> None:
     print("English source and cleared outputs: passed")
     print("Synthetic retrieval-metric semantics: passed")
     print("Final-fit evaluation guard: passed")
+    print("Missing-evidence and selected-depth regression checks: passed")
+    print("Complete-prediction evaluation checks: passed")
     print(f"Notebook schema: {schema_status}")
     print("Full indexing, model loading and training: not run")
 

@@ -16,7 +16,7 @@ evidence recall, classifier accuracy, or a hidden test score.
 ## Recorded final-submission notebook run
 
 The following results come from saved outputs in the supplied final notebook,
-not from a fresh run of this curated copy:
+not from a fresh training run:
 
 | Evaluation setting | Recorded result |
 | --- | --- |
@@ -39,7 +39,7 @@ The historical notebook fits a final classifier on train+development labels and
 then evaluates it on that same development set. Its 100% development result is
 an overlapping-training diagnostic and is not evidence of generalization.
 
-The curated notebook disables final test-submission generation by default.
+The notebook disables final test-submission generation by default.
 When enabled, the final fit uses the epoch count selected earlier, saves the
 last model, and performs no overlapping development evaluation or checkpoint
 selection. This evaluation hygiene change has not been validated by a fresh
@@ -56,6 +56,9 @@ are not combined into one claimed experiment.
 ## Reproducibility limits
 
 - The exact installed dependency versions were not captured in the original package.
+- Evaluation now rejects incomplete prediction files. Missing retrieved evidence
+  also raises an error rather than silently substituting gold evidence or a
+  default passage. These guards do not change the metric definitions.
 - The original logs include model-loading warnings, so historical results require
   rerunning in a recorded environment before independent verification.
 - TF-IDF caches check configuration and input path but do not fingerprint every
