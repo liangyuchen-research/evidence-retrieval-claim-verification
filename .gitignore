@@ -1,0 +1,25 @@
+# Local environments and caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.env
+.env.*
+# Research data, generated predictions, indexes, and model checkpoints
+data/*
+!data/README.md
+artifacts/
+artifacts_*/
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.joblib
+*.npz
+submission.zip
+test-output.json
+dev-claims-predictions.json
+# Platform files
+.DS_Store
+Thumbs.db
