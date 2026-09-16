@@ -1,11 +1,11 @@
 # Original notebook minimum versions. Exact source environment was not captured.
 # Install a PyTorch build suitable for your hardware before running GPU training.
-torch
+torch>=2.2,<3
 numpy
-transformers>=4.41
+transformers>=4.41,<5
 sentencepiece>=0.1.99
 tokenizers>=0.15
-datasets>=2.18
+datasets>=2.18,<5
 accelerate>=0.30
 scikit-learn>=1.3
 scipy>=1.10

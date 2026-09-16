@@ -8,7 +8,8 @@ The original notebook references the University of Melbourne course repository:
 [COMP90042 2026](https://github.com/drcarenhan/COMP90042_2026).
 It also references a course Google Drive download for `evidence.json`; the
 existing downloader remains in the notebook behind `DOWNLOAD_DATA = False`.
-Availability of those external sources has not been revalidated.
+The public course repository was reachable during the September 2026 review.
+The large Google Drive corpus download was not repeated.
 
 Place these files in this directory:
 

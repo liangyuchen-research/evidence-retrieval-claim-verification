@@ -61,8 +61,9 @@ are not combined into one claimed experiment.
   default passage. These guards do not change the metric definitions.
 - The original logs include model-loading warnings, so historical results require
   rerunning in a recorded environment before independent verification.
-- TF-IDF caches check configuration and input path but do not fingerprint every
-  corpus byte. Clear or choose a new artifact directory when the corpus changes.
+- TF-IDF caches now check configuration and the corpus SHA-256 fingerprint.
+  Retrieval caches also check claim content, candidate depth and reranker settings.
+  Stale or older caches are rebuilt rather than silently reused.
 - The cross-encoder is pretrained, not fine-tuned by this project.
 - The corpus and pretrained model files are external dependencies.
 - No hidden-test ground truth or verified hidden-test score was supplied.

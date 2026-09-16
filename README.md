@@ -72,8 +72,9 @@ the configuration cell, and run the notebook cells in order. Package installatio
 inside the notebook is disabled by default.
 
 The notebook resolves paths from the repository or its `notebooks/` directory.
-`CLAIM_PROJECT_ROOT` can override that root. Large matrices, predictions and
-checkpoints are written to the ignored `artifacts/` directory. Downloading data
+`CLAIM_PROJECT_ROOT` can override that root. `CLAIM_DATA_DIR` and
+`CLAIM_ARTIFACT_DIR` select separate input and output directories. Large matrices,
+predictions and checkpoints default to the ignored `artifacts/` directory. Downloading data
 and training the optional final train+development classifier require explicit
 configuration switches. The default workflow still includes expensive index
 construction and classifier training.
@@ -81,7 +82,9 @@ construction and classifier training.
 The full evidence index requires substantial host memory and disk space, and
 classifier training benefits from a GPU. Model weights and the source corpus
 are external dependencies. The requirements file gives dependency ranges rather
-than an exact lock of the original environment.
+than an exact lock of the original environment. `constraints-tested.txt` records
+the Python 3.12 versions used for the maintenance checks and can be supplied with
+`pip install -r requirements.txt -c constraints-tested.txt`.
 
 ## Repository contents
 
@@ -90,10 +93,25 @@ than an exact lock of the original environment.
 - `docs/provenance.md`: source and maintenance notes.
 - `data/README.md`: input schema and source links.
 - `scripts/check_notebook.py`: notebook validation and synthetic regression checks.
+- `scripts/check_retrieval.py`: actual TF-IDF indexing and cache checks on synthetic passages.
+- `scripts/check_trainer.py`: local DeBERTa/Trainer compatibility check without downloaded weights.
 
 Run `python scripts/check_notebook.py` for local checks without downloading
 models or running training. Notebook schema validation additionally uses
 `nbformat` when installed.
+
+For numerical retrieval and training API checks, run:
+
+```bash
+python scripts/check_retrieval.py
+python scripts/check_trainer.py
+```
+
+The trainer check uses a tiny randomly initialized DeBERTa encoder and four
+synthetic examples. It tests one CPU optimizer step, evaluation, prediction,
+checkpoint export and reload. It is a software check, not a reproduction of
+the reported experiment. Transformers is bounded below version 5 to avoid
+unreviewed major API changes.
 
 ## Attribution and reuse
 
