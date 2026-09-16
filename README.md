@@ -4,6 +4,12 @@ A retrieval and classification pipeline for checking claims against
 **1,208,827 evidence passages**, developed for Natural Language Processing
 at the University of Melbourne.
 
+**Source code:** [Pipeline notebook](notebooks/claim_verification.ipynb) · [Offline validation](scripts/check_notebook.py) · [Dependencies](requirements.txt)
+
+The implementation is provided as a Jupyter notebook, including candidate
+retrieval, cross-encoder reranking, classifier training, evaluation, and prediction
+export. Dataset files and pretrained model weights are separate dependencies.
+
 The system first retrieves candidate evidence with word and character TF-IDF,
 reranks the candidates with a MiniLM cross-encoder, and classifies each claim
 with a fine-tuned DeBERTa-v3 model. Word and character features provide broad
