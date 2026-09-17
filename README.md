@@ -1,5 +1,7 @@
 # Two-Stage Evidence Retrieval and Transformer-Based Claim Verification
 
+[![checks](https://github.com/liangyuchen-research/evidence-retrieval-claim-verification/actions/workflows/checks.yml/badge.svg)](https://github.com/liangyuchen-research/evidence-retrieval-claim-verification/actions/workflows/checks.yml)
+
 A retrieval and classification pipeline for checking claims against
 **1,208,827 evidence passages**, developed for Natural Language Processing
 at the University of Melbourne.
@@ -35,7 +37,7 @@ flowchart LR
 | Candidate retrieval | Weighted word unigrams/bigrams and character 3-5-grams |
 | Candidate pool | 500 passages per claim |
 | Reranking | `cross-encoder/ms-marco-MiniLM-L6-v2` |
-| Evidence selection | K = 2-7, selected using development retrieval F1 |
+| Evidence selection | K = 3, chosen from K = 2–7 by development retrieval F1 |
 | Classification | `microsoft/deberta-v3-base`, class-weighted cross-entropy |
 | Labels | Supports, refutes, not enough information, disputed |
 | Tools | PyTorch, Hugging Face Transformers, scikit-learn, SciPy |
@@ -116,6 +118,9 @@ unreviewed major API changes.
 ## Attribution and reuse
 
 Developed as **Team 32, Natural Language Processing, 2026** at the University
-of Melbourne. The implementation is maintained here by Liang-Yu Chen.
+of Melbourne. My part of the project was the retrieval and modelling pipeline in
+this notebook: the word- and character-level TF-IDF index over the 1.2M-passage
+corpus and its top-500 candidate retrieval, the cross-encoder reranking and the
+selection of K = 3 evidence passages, and the class-weighted fine-tuning of the
+DeBERTa-v3 classifier. The implementation is maintained here by Liang-Yu Chen.
 See [NOTICE.md](NOTICE.md) for third-party model and data attribution.
-The project has no separate open-source license.
